@@ -1,0 +1,93 @@
+There are several issues and warnings with the provided code:
+
+The setSelectedIndex state variable is not properly initialized. It should be initialized with a default value (e.g., useState(null)), and not just declared.
+
+The onClickHandler prop of the SingleListItem component is not being called correctly. It should be passed as a callback function (e.g., onClick={() => onClickHandler(index)}), and not invoked immediately (e.g., onClick={onClickHandler(index)}).
+
+The isSelected prop of the SingleListItem component is not being passed correctly. It should be passed as a boolean value (e.g., isSelected={selectedIndex === index}), and not the selectedIndex state variable directly.
+
+The PropTypes.array validation in the WrappedListComponent component is incorrect. It should be PropTypes.arrayOf(PropTypes.shape({...})), not PropTypes.array(PropTypes.shape({...})).
+
+Here's an updated version of the code with the above issues fixed and some additional optimizations:
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import PropTypes from 'prop-types';
+
+// Single List Item
+const SingleListItem = memo(({ index, isSelected, onClickHandler, text }) => {
+  const handleClick = useCallback(() => {
+    onClickHandler(index);
+  }, [index, onClickHandler]);
+
+  return (
+    <li
+      style={{ backgroundColor: isSelected ? 'green' : 'red' }}
+      onClick={handleClick}
+    >
+      {text}
+    </li>
+  );
+});
+
+SingleListItem.propTypes = {
+  index: PropTypes.number.isRequired,
+  isSelected: PropTypes.bool.isRequired,
+  onClickHandler: PropTypes.func.isRequired,
+  text: PropTypes.string.isRequired,
+};
+
+// List Component
+const List = memo(({ items }) => {
+  const [selectedIndex, setSelectedIndex] = useState(null);
+
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [items]);
+
+  const handleClick = useCallback((index) => {
+    setSelectedIndex(index);
+  }, []);
+
+  return (
+    <ul style={{ textAlign: 'left' }}>
+      {items.map((item, index) => (
+        <SingleListItem
+          key={index}
+          onClickHandler={handleClick}
+          text={item.text}
+          index={index}
+          isSelected={selectedIndex === index}
+        />
+      ))}
+    </ul>
+  );
+});
+
+List.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      text: PropTypes.string.isRequired,
+    })
+  ),
+};
+
+List.defaultProps = {
+  items: null,
+};
+
+export default List;
+
+In this updated version of the code:
+
+The SingleListItem component now uses the useCallback hook to memoize the handleClick function and avoid unnecessary re-renders.
+
+The SingleListItem component now passes the onClickHandler prop as a callback function, using the memoized handleClick function.
+
+The SingleListItem component now correctly passes the isSelected prop as a boolean value, using the selectedIndex state variable.
+
+The List component now correctly uses PropTypes.arrayOf to validate the items prop, and specifies the shape of each item using PropTypes.shape.
+
+The List component now uses the useCallback hook to memoize the handleClick function and avoid unnecessary re-renders.
+
+The List component now passes the key prop to each SingleListItem component, using the index variable.
+
+The List component now uses destructuring to extract the items prop directly, instead of accessing it through the props object.
